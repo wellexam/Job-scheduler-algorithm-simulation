@@ -96,17 +96,6 @@ void initial_jobs()
 void FCFSschedulejob(job jobs[],int count)
 {
     int mark=-1, early = 10000000;
-    // cout << "作业ID 到达时间 执行时间 优先权 等待时间 周转时间 带权周转时间" << endl;
-    // for (int i = 0; jobs[i].number; i++)
-    // {
-    //     cout << jobs[i].number << "        "
-    //          << jobs[i].reach_time << "       "
-    //          << jobs[i].need_time << "       "
-    //          << jobs[i].privilege << "        "
-    //          << jobs[i].wait_time << "       "
-    //          << jobs[i].tr_time << "       "
-    //          << jobs[i].wtr_time << endl;
-    // }
     for (int i = 0; jobs[i].number; i++)
     {
         if(jobs[i].reach_time>0)
@@ -115,9 +104,6 @@ void FCFSschedulejob(job jobs[],int count)
             {
                 early = jobs[i].reach_time;
                 mark = i;
-                // cout  << "early: " << early << endl;
-                // cout << "count: " << count << endl;
-                // cout << "i: " << i << endl;
             }
         }
     }
@@ -161,17 +147,6 @@ void FCFSschedulejob(job jobs[],int count)
 void SJFschedulejob(job jobs[],int count)
 {
     int mark=-1, shortest = 10000000, early = 1000000;
-    // cout << "作业ID 到达时间 执行时间 优先权 等待时间 周转时间 带权周转时间" << endl;
-    // for (int i = 0; jobs[i].number; i++)
-    // {
-    //     cout << jobs[i].number << "        "
-    //          << jobs[i].reach_time << "       "
-    //          << jobs[i].need_time << "       "
-    //          << jobs[i].privilege << "        "
-    //          << jobs[i].wait_time << "       "
-    //          << jobs[i].tr_time << "       "
-    //          << jobs[i].wtr_time << endl;
-    // }
     for (int i = 0; jobs[i].number; i++)
     {
         if(jobs[i].need_time>0&&jobs[i].reach_time<=count)
