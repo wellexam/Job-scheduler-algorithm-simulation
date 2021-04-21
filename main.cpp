@@ -62,7 +62,7 @@ void read_Jobdata()
 
 void FCFSschedulejob(job jobs[],int count)
 {
-    int mark, early;
+    int mark, early = count;
     for (int i = 0; jobs[i].number; i++)
     {
         if(jobs[i].reach_time<=count&&jobs[i].reach_time)
@@ -74,6 +74,13 @@ void FCFSschedulejob(job jobs[],int count)
             }
         }
     }
-    count += jobs[mark].need_time;
+    jobs[mark].wait_time = count - jobs[mark].reach_time;//等待时间
+    count += jobs[mark].need_time;//执行作业
+    jobs[mark].tr_time = count - jobs[mark].reach_time;
+    jobs[mark].wtr_time = jobs[mark].need_time / (jobs[mark].tr_time*1.0);
     jobs[mark].reach_time = 0;
+    cout << "执行完的作业是:  " << jobs[mark].number << "号作业，"
+         << "等待时间为 " << jobs[mark].wait_time << "周转时间为 " << jobs[mark].tr_time << "带权周转时间为 " << endl;
+    FCFSschedulejob(jobs, count);
+    return;
 }
