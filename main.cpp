@@ -1,6 +1,6 @@
 #include<iostream>
 #include<fstream>
-#include<windows.h>
+#include<iomanip>
 
 using namespace std;
 
@@ -19,6 +19,21 @@ class job
         int run_time;       //作业累计已执行时间
         int visited;		  //作业是否被访问过
         bool isreached;	  //作业是否已抵达
+
+        void operator = (const job &b)
+        {
+            number = b.number;
+            reach_time = b.reach_time;
+            need_time = b.need_time;
+            privilege = b.privilege;
+            start_time = b.wait_time;
+            wait_time = b.wait_time;
+            tr_time = b.tr_time;
+            wtr_time = b.wtr_time;
+            run_time = b.run_time;
+            visited = b.visited;
+            isreached = b.isreached;
+        }
 };
 
 void read_Jobdata(); //读取数据文件；
@@ -28,7 +43,7 @@ void SJFschedulejob(job jobs[],int count);//短作业优先算法
 void FCFSschedulejob(job jobs[],int count);//先来先服务算法
 void calculate(job jobs[]);//计算平均时间
 
-static job que[100];
+static job que[100], backup[100];
 
 int main()
 {
@@ -43,7 +58,8 @@ int main()
     }
     cout << "先来先服务：" << endl;
     FCFSschedulejob(que, 0);
-    cout << "短作业优先： " << endl;
+    initial_jobs();
+    cout << "短作业优先服务： " << endl;
     SJFschedulejob(que, 0);
     return 0;
 }
@@ -56,12 +72,24 @@ void read_Jobdata()
     while(!file.eof())
     {
         file >> que[i].number;
+        backup[i].number = que[i].number;
         file >> que[i].reach_time;
+        backup[i].reach_time = que[i].reach_time;
         file >> que[i].need_time;
+        backup[i].need_time = que[i].need_time;
         file >> que[i].privilege;
+        backup[i].privilege = que[i].privilege;
         i++;
     }
     que[i].number = 0;
+    backup[i].number = 0;
+    return;
+}
+
+void initial_jobs()
+{
+    for (int i = 0; backup[i].number; i++)
+        que[i] = backup[i];
     return;
 }
 
@@ -183,10 +211,10 @@ void SJFschedulejob(job jobs[],int count)
         jobs[mark].wtr_time = (jobs[mark].tr_time*1.0) / jobs[mark].need_time;//带权周转时间
         jobs[mark].need_time = 0;
         cout << "执行完的作业是:  " << jobs[mark].number << "号作业，"
-            << " 等待时间为 " << jobs[mark].wait_time
-            << " 周转时间为 " << jobs[mark].tr_time
-            << " 带权周转时间为 " << jobs[mark].wtr_time
-            << endl;
+             << " 等待时间为 " << jobs[mark].wait_time
+             << " 周转时间为 " << jobs[mark].tr_time
+             << " 带权周转时间为 " << jobs[mark].wtr_time
+             << endl;
         SJFschedulejob(jobs, count);
         return;
     }
@@ -198,10 +226,10 @@ void SJFschedulejob(job jobs[],int count)
         jobs[mark].wtr_time = (jobs[mark].tr_time*1.0) / jobs[mark].need_time;//带权周转时间
         jobs[mark].need_time = 0;
         cout << "执行完的作业是:  " << jobs[mark].number << "号作业，"
-            << " 等待时间为 " << jobs[mark].wait_time
-            << " 周转时间为 " << jobs[mark].tr_time
-            << " 带权周转时间为 " << jobs[mark].wtr_time
-            << endl;
+             << " 等待时间为 " << jobs[mark].wait_time
+             << " 周转时间为 " << jobs[mark].tr_time
+             << " 带权周转时间为 " << jobs[mark].wtr_time
+             << endl;
         SJFschedulejob(jobs, count);
         return;
     }
@@ -219,7 +247,8 @@ void calculate(job jobs[])
         avg_wtr += jobs[i].wtr_time;
     }
     double div = i;
-    cout << "平均等待时间: " << avg_wait/div << endl
+    cout << fixed << setprecision(2)
+         << "平均等待时间: " << avg_wait/div << endl
          << "平均周转时间: " << avg_tr/div << endl
          << "平均带权周转时间: " << avg_wtr/i << endl;
     return;
