@@ -44,6 +44,7 @@ void calculate(job jobs[]);                   //计算平均时间
 void initial_rr();                            //初始化rr序列
 void reach(int time);                         //判断到达与否
 void early();                                 //查找最早到达
+void early(list<job>::iterator &it);          //插入队列
 void SJF_schedulejob(job jobs[], int count);  //短作业优先算法
 void FCFS_schedulejob(job jobs[], int count); //先来先服务算法
 void RR_schedulejob();                        //时间片轮转算法
@@ -64,9 +65,9 @@ int main()
     SJF_schedulejob(que, 0);
 
     initial_jobs();
-    initial_rr();
 
     cout << "时间片轮转: " << endl;
+    RR_schedulejob();
     return 0;
 }
 
@@ -87,28 +88,17 @@ void initial_rr()
     for (int count = 0;; count++)
     {
         reach(count);
-        bool mark = false;
-        for (int i = 0; que[i].number; i++)
-        {
-            if (que[i].isreached)
-            {
-                que[i].visited = true;
-                rr.push_back(que[i]);
-                mark = true;
-                break;
-            }
-        }
-        if (mark)
-            break;
+        early();
+        if (!rr.empty())
+            return;
     }
-    return;
 }
 
 void reach(int time)
 {
     for (int i = 0; que[i].number; i++)
     {
-        if (que[i].reach_time >= time)
+        if (que[i].reach_time <= time)
             que[i].isreached = true;
         else
             que[i].isreached = false;
@@ -180,13 +170,38 @@ void early()
             flag++;
         }
     }
-    if (flag--)
+    if (flag)
     {
         que[pos].visited = true;
         rr.push_back(que[pos]);
+        flag--;
     }
     if (flag)
         early();
+    return;
+}
+
+void early(list<job>::iterator &it)
+{
+    int earliest = 100000, pos;
+    int flag = 0;
+    for (int i = 0; que[i].number; i++)
+    {
+        if (que[i].isreached && !que[i].visited && que[i].reach_time <= earliest)
+        {
+            earliest = que[i].reach_time;
+            pos = i;
+            flag++;
+        }
+    }
+    if (flag)
+    {
+        que[pos].visited = true;
+        rr.insert(it, que[pos]);
+        flag--;
+    }
+    if (flag)
+        early(it);
     return;
 }
 
@@ -309,25 +324,40 @@ void SJF_schedulejob(job jobs[], int count)
 
 void RR_schedulejob()
 {
+    initial_rr();
     static const int frame = 10;
     int count = rr.begin()->reach_time;
     list<job>::iterator iter = rr.begin();
-    if (iter->need_time >= frame)
+    if (iter->need_time > frame)
     {
         iter->need_time -= frame;
         count += frame;
         iter->run_time += frame;
+        cout << iter->number << "号作业执行了" << frame << endl;
     }
     else
     {
         count += iter->need_time;
         iter->run_time += iter->need_time;
+        cout << iter->number << "号作业执行了" << iter->need_time << endl;
         iter->need_time = 0;
     }
     while (true)
     {
+        if(count >= 2000)
+        {
+            return;
+        }
         reach(count);
-        early();
+        early(iter);
+        if (!iter->need_time)
+        {
+            if (rr.size() == 1)
+            {
+                count++;
+                continue;
+            }
+        }
         if (iter->need_time)
         {
             iter++;
@@ -336,12 +366,16 @@ void RR_schedulejob()
         {
             iter->tr_time = count - iter->reach_time;
             iter->wait_time = iter->tr_time - iter->run_time;
-            // iter->wtr_time = iter->
+            iter->wtr_time = (iter->run_time * 1.0) / iter->tr_time;
             cout << "执行完的作业是:  " << iter->number << "号作业"
                  << " 等待时间为 " << iter->wait_time
                  << " 周转时间为 " << iter->tr_time
                  << " 带权周转时间为 " << iter->wtr_time
                  << endl;
+            int pos = iter->number;
+            que[pos].tr_time = iter->tr_time;
+            que[pos].wait_time = iter->wait_time;
+            que[pos].wtr_time = iter->wtr_time;
             list<job>::iterator temp = iter;
             iter++;
             rr.erase(temp);
@@ -350,18 +384,22 @@ void RR_schedulejob()
         {
             iter = rr.begin();
         }
-        if (iter->need_time >= frame)
+        if (iter->need_time > frame)
         {
             iter->need_time -= frame;
             count += frame;
             iter->run_time += frame;
+            cout << iter->number << "号作业执行了" << frame << endl;
+            cout << "count: " << count << endl;
             continue;
         }
         else
         {
             count += iter->need_time;
             iter->run_time += iter->need_time;
+            cout << iter->number << "号作业执行了" << iter->need_time << endl;
             iter->need_time = 0;
+            cout << "count: " << count << endl;
             continue;
         }
     }
