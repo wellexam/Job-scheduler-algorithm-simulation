@@ -43,8 +43,8 @@ void initial_jobs();                            //初始化所有作业信息
 void calculate(job jobs[]);                     //计算平均时间
 void initial_rr();                              //初始化rr序列
 void reach(int time);                           //判断到达与否
-void early();                                   //查找最早到达
-void early(list<job>::iterator &it, int count); //插入队列
+void early();                                   //查找最早到达的作业
+void early(list<job>::iterator &it, int count); //将新到达的作业插入队列
 void SJF_schedulejob(job jobs[], int count);    //短作业优先算法
 void FCFS_schedulejob(job jobs[], int count);   //先来先服务算法
 void RR_schedulejob();                          //时间片轮转算法
@@ -55,7 +55,9 @@ static list<job> rr;
 int main()
 {
     read_Jobdata();
+    initial_jobs();
     print_Jobdata();
+
     cout << "先来先服务：" << endl;
     FCFS_schedulejob(que, 0);
 
@@ -72,7 +74,7 @@ int main()
     return 0;
 }
 
-void print_Jobdata()
+void print_Jobdata()//打印数据
 {
     cout << "作业ID 到达时间 执行时间 优先权" << endl;
     for (int i = 0; que[i].number; i++)
@@ -84,7 +86,7 @@ void print_Jobdata()
     }
 }
 
-void initial_rr()
+void initial_rr()//初始化rr序列
 {
     for (int count = 0;; count++)
     {
@@ -95,7 +97,7 @@ void initial_rr()
     }
 }
 
-void reach(int time)
+void reach(int time)//判断到达与否
 {
     for (int i = 0; que[i].number; i++)
     {
@@ -107,39 +109,34 @@ void reach(int time)
     return;
 }
 
-void read_Jobdata()
+void read_Jobdata()//读取数据文件
 {
     fstream file;
     file.open("data.txt", ios::in);
     int i = 0;
     while (!file.eof())
     {
-        file >> que[i].number;
-        backup[i].number = que[i].number;
-        file >> que[i].reach_time;
-        backup[i].reach_time = que[i].reach_time;
-        file >> que[i].need_time;
-        backup[i].need_time = que[i].need_time;
-        file >> que[i].privilege;
-        backup[i].privilege = que[i].privilege;
+        file >> backup[i].number;
+        file >> backup[i].reach_time;
+        file >> backup[i].need_time;
+        file >> backup[i].privilege;
         backup[i].visited = false;
         backup[i].run_time = 0;
         i++;
     }
-    que[i].number = 0;
     backup[i].number = 0;
     file.close();
     return;
 }
 
-void initial_jobs()
+void initial_jobs()//初始化所有作业信息
 {
     for (int i = 0; backup[i].number; i++)
         que[i] = backup[i];
     return;
 }
 
-void calculate(job jobs[])
+void calculate(job jobs[])//计算平均时间
 {
     int avg_wait = 0, avg_tr = 0;
     double avg_wtr = 0;
@@ -154,11 +151,11 @@ void calculate(job jobs[])
     cout << fixed << setprecision(2)
          << "平均等待时间: " << avg_wait / div << endl
          << "平均周转时间: " << avg_tr / div << endl
-         << "平均带权周转时间: " << avg_wtr / i << endl;
+         << "平均带权周转时间: " << avg_wtr / div << endl;
     return;
 }
 
-void early()
+void early()//查找最早到达的作业
 {
     int earliest = 100000, pos;
     int flag = 0;
@@ -182,7 +179,7 @@ void early()
     return;
 }
 
-void early(list<job>::iterator &it, int count)
+void early(list<job>::iterator &it, int count)//将新到达的作业插入队列
 {
     int earliest = 100000, pos;
     int flag = 0;
@@ -211,10 +208,10 @@ void early(list<job>::iterator &it, int count)
     return;
 }
 
-void FCFS_schedulejob(job jobs[], int count)
+void FCFS_schedulejob(job jobs[], int count)//先来先服务算法
 {
     int mark = -1, early = 10000000;
-    for (int i = 0; jobs[i].number; i++)
+    for (int i = 0; jobs[i].number; i++)//找出当前已到达的作业中最早的作业
     {
         if (jobs[i].reach_time > 0)
         {
@@ -225,27 +222,28 @@ void FCFS_schedulejob(job jobs[], int count)
             }
         }
     }
-    if (mark == -1)
+    if (mark == -1)//如果已没有为执行的作业，计算平均时间并返回
     {
         calculate(jobs);
         return;
     }
-    if (early <= count)
+    if (early <= count)//当前作业先于中断时刻到达
     {
         jobs[mark].wait_time = count - jobs[mark].reach_time;                    //等待时间
         count += jobs[mark].need_time;                                           //执行作业
         jobs[mark].tr_time = count - jobs[mark].reach_time;                      //周转时间
         jobs[mark].wtr_time = (jobs[mark].tr_time * 1.0) / jobs[mark].need_time; //带权周转时间
         jobs[mark].reach_time = 0;
-        cout << "执行完的作业是:  " << jobs[mark].number << "号作业"
+        cout << fixed << setprecision(2)
+             << "执行完的作业是:  " << jobs[mark].number << "号作业"
              << " 等待时间为 " << jobs[mark].wait_time
              << " 周转时间为 " << jobs[mark].tr_time
              << " 带权周转时间为 " << jobs[mark].wtr_time
              << endl;
-        FCFS_schedulejob(jobs, count);
+        FCFS_schedulejob(jobs, count);//递归查找
         return;
     }
-    else
+    else//当前作业晚于中断时刻到达
     {
         jobs[mark].wait_time = 0;                                                //等待时间
         count = jobs[mark].reach_time + jobs[mark].need_time;                    //执行作业
@@ -257,15 +255,15 @@ void FCFS_schedulejob(job jobs[], int count)
              << " 周转时间为 " << jobs[mark].tr_time
              << " 带权周转时间为 " << jobs[mark].wtr_time
              << endl;
-        FCFS_schedulejob(jobs, count);
+        FCFS_schedulejob(jobs, count);//递归查找
         return;
     }
 }
 
-void SJF_schedulejob(job jobs[], int count)
+void SJF_schedulejob(job jobs[], int count)//短作业优先算法
 {
     int mark = -1, shortest = 10000000, early = 1000000;
-    for (int i = 0; jobs[i].number; i++)
+    for (int i = 0; jobs[i].number; i++)//查找当前到达作业中耗时最短的
     {
         if (jobs[i].need_time > 0 && jobs[i].reach_time <= count)
         {
@@ -277,7 +275,7 @@ void SJF_schedulejob(job jobs[], int count)
             }
         }
     }
-    if (mark == -1)
+    if (mark == -1)//若当前时刻没有到达的作业，则查找下一个最早到达的作业
     {
         for (int i = 0; jobs[i].number; i++)
         {
@@ -291,12 +289,12 @@ void SJF_schedulejob(job jobs[], int count)
             }
         }
     }
-    if (mark == -1)
+    if (mark == -1)//所有作业已执行完毕，计算平均时间并返回
     {
         calculate(jobs);
         return;
     }
-    if (early <= count)
+    if (early <= count)//当前作业先于中断时刻到达
     {
         jobs[mark].wait_time = count - jobs[mark].reach_time;                    //等待时间
         count += jobs[mark].need_time;                                           //执行作业
@@ -308,10 +306,10 @@ void SJF_schedulejob(job jobs[], int count)
              << " 周转时间为 " << jobs[mark].tr_time
              << " 带权周转时间为 " << jobs[mark].wtr_time
              << endl;
-        SJF_schedulejob(jobs, count);
+        SJF_schedulejob(jobs, count);//递归查找
         return;
     }
-    else
+    else//当前作业晚于中断时刻到达
     {
         jobs[mark].wait_time = 0;                                                //等待时间
         count = jobs[mark].reach_time + jobs[mark].need_time;                    //执行作业
@@ -323,17 +321,18 @@ void SJF_schedulejob(job jobs[], int count)
              << " 周转时间为 " << jobs[mark].tr_time
              << " 带权周转时间为 " << jobs[mark].wtr_time
              << endl;
-        SJF_schedulejob(jobs, count);
+        SJF_schedulejob(jobs, count);//递归查找
         return;
     }
 }
 
-void RR_schedulejob()
+void RR_schedulejob()//时间片轮转算法
 {
-    initial_rr();
-    static const int frame = 10;
-    int count = rr.begin()->reach_time;
-    list<job>::iterator iter = rr.begin();
+    initial_rr();//初始化rr序列
+    static const int frame = 10;//设置时间片
+    int count = rr.begin()->reach_time;//时间设为rr序列首个作业的到达时间
+    list<job>::iterator iter = rr.begin();//迭代器指向rr序列队首
+    //执行首个作业
     if (iter->need_time > frame)
     {
         iter->need_time -= frame;
@@ -348,6 +347,7 @@ void RR_schedulejob()
         cout << iter->number << "号作业执行了" << iter->need_time << endl;
         iter->need_time = 0;
     }
+    //开始轮转调度
     while (true)
     {
         //防止死循环
